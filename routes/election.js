@@ -8,8 +8,8 @@ router.post("", async (req, res) => {
   const electionSchema = yup.object().shape({
     name: yup.string().required("Required"),
     class_name: yup.string().required("Required"),
-    start_date: yup.date.string().required("Required"),
-    end_date: yup.date.string().required("Required"),
+    start_date: yup.date().required("Required"),
+    end_date: yup.date().required("Required"),
   });
 
   const body = req.body;
@@ -18,9 +18,10 @@ router.post("", async (req, res) => {
 
     const { name, class_name, start_date, end_date } = body;
     connection.query(
-      "INSERT INTO election (name,class,start_date,end_date,created_at) VALUES(?,?,?,?,?)",
+      "INSERT INTO election (name,class_name,start_date,end_date,created_at) VALUES(?,?,?,?,?)",
       [name, class_name, start_date, end_date, new Date()],
       (err, result) => {
+        console.log(err);
         if (err) return res.status(500).send("An error Occurred");
         console.log(result);
         return res
@@ -73,12 +74,34 @@ router.get("/search", (req, res) => {
       if (err) return res.status(200).json(result);
     }
   );
-  
+});
 
-  //GET ELECTION
+//GET ELECTION
 
-  router.get()
+router.get("/:id", (req, res) => {
+  const id = req.params.id;
 
+  connection.query(
+    "SELECT * FROM election WHERE id = ? ",
+    [id],
+    (err, result) => {
+      if (err) return res.status(500).send("An error occured");
+      if (result.length === 0) {
+        return res.status(400).json({ message: "Election not found" });
+      } else {
+        return res.status(200).json(result);
+      }
+    }
+  );
+});
+
+//DELETE
+router.delete("/:id", (req, res) => {
+  const id = req.params.id;
+
+  connection.query("DELETE election WHERE id = ?", [id], (err, result) => {
+    return res.status(200).json({ message: "Delete election Successfully" });
+  });
 });
 
 module.exports = router;
